@@ -1,0 +1,105 @@
+#mkdir code; cd code
+
+#Create a file provider.tf
+provider "aws" {
+region = "us-west-2"
+}
+
+#create another file volume.tf
+resource "aws_ebs_volume" "bad_example" {
+   availability_zone = "us-west-2a"
+   size              = 40
+
+   tags = {
+     Name = "HelloWorld"
+   }
+   encrypted = false
+ }
+ 
+ 
+ #Execute below commands
+ terraform init
+ 
+ #To validate the terraform code 
+ terraform plan
+ 
+ #Now execute tfsec to validate the resource complaince report
+ /root/go/bin/tfsec .
+
+Result #1 HIGH EBS volume is not encrypted.
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  volume.tf:8
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    1      resource "aws_ebs_volume" "EBS-new" {
+    2       availability_zone = "us-west-2a"
+    3       size              = 40
+    4
+    5       tags = {
+    6         Name = "New-EBS"
+    7       }
+    8  [    encrypted = false (false)
+    9     }
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+          ID aws-ec2-enable-volume-encryption
+      Impact Unencrypted sensitive data is vulnerable to compromise.
+  Resolution Enable encryption of EBS volumes
+
+  More Information
+  - https://aquasecurity.github.io/tfsec/latest/checks/aws/ec2/enable-volume-encryption/
+  - https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ebs_volume#encrypted
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+Result #2 LOW EBS volume does not use a customer-managed KMS key.
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  volume.tf:1-9
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    1      resource "aws_ebs_volume" "EBS-new" {
+    2       availability_zone = "us-west-2a"
+    3       size              = 40
+    4
+    5       tags = {
+    6         Name = "New-EBS"
+    7       }
+    8       encrypted = false
+    9     }
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+          ID aws-ec2-volume-encryption-customer-key
+      Impact Using AWS managed keys does not allow for fine grained control
+  Resolution Enable encryption using customer managed keys
+
+  More Information
+  - https://aquasecurity.github.io/tfsec/latest/checks/aws/ec2/volume-encryption-customer-key/
+  - https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ebs_volume#kms_key_id
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+  timings
+  ──────────────────────────────────────────
+  disk i/o             19.507µs
+  parsing              344.465µs
+  adaptation           92.77µs
+  checks               9.422245ms
+  total                9.878987ms
+
+  counts
+  ──────────────────────────────────────────
+  modules downloaded   0
+  modules processed    1
+  blocks processed     2
+  files read           2
+
+  results
+  ──────────────────────────────────────────
+  passed               2
+  ignored              0
+  critical             0
+  high                 1
+  medium               0
+  low                  1
+
+  2 passed, 2 potential problem(s) detected.
+ 
+ 
+ 
+ 
