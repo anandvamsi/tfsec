@@ -1,0 +1,15 @@
+Execute the followin in amazon linux
+# In Amazon Linux or Centos
+
+yum install golang
+go install github.com/aquasecurity/tfsec/cmd/tfsec@latest
+
+Verfiy Installation 
+/root/go/bin/tfsec -v
+You are running a locally built version of tfsec.
+
+
+Install terrform
+sudo yum install -y yum-utils shadow-utils
+sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
+sudo yum -y install terraform
